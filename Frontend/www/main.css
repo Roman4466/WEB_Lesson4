@@ -18,7 +18,7 @@ body{
     height: 100px;
     width:calc(100% - 350px);
     background-color: black;
-    opacity: 85%;
+    opacity: 85%;/* This makes the top bar semi-transparent */
     z-index:3;
 }
 .delivery-info{
@@ -139,15 +139,17 @@ body{
     margin-top: 6px;
 }
 .pizza-filters .pizzas-amount{
-    margin-left:4px;
+    margin-left: 4px;
     font-size: 20px;
     font-weight: bold;
     color: white;
     background-color: #FF5733;
     border-radius: 50%;
-    display: inline-block;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    width:30px;
+    width: 30px;
     height: 30px;
 }
 .filters{
@@ -521,7 +523,7 @@ img{
     width: 50px;
     position: relative;
     left: 90%;
-    bottom: 100%;
+    bottom: 98%;
     background-color: #cb5b51;
     color: white;
     font-weight: bold;
@@ -529,13 +531,14 @@ img{
     border-radius: 4px;
     display: flex;
     justify-content: center;
+    z-index: 1;
 }
 .popular{
     height: 25px;
     width: 100px;
     position: relative;
     right: -75%;
-    top: -100%;
+    top: -98%;
     background-color: #72b763;
     color: white;
     font-weight: bold;
@@ -543,6 +546,7 @@ img{
     border-radius: 4px;
     display: flex;
     justify-content: center;
+    z-index: 1;
 }
 .footer{
     color: #898989;
@@ -563,6 +567,7 @@ img{
 .footer span{
     display: block;
 }
+
 @media(max-width: 730px) {
 
     .ordered-item .details .size{
