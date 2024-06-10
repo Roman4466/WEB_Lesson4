@@ -100,7 +100,6 @@ function createBadge(pizza) {
 
 let total = document.querySelector(".cart .cart-title span span");
 let total_sum = document.querySelector(".cart .buy-section .sum");
-let all_pizzas = 8;
 
 class Pizza {
     constructor(name, large, quantity, price, image, weight) {
@@ -245,162 +244,107 @@ function removePizza(event) {
 }
 
 function downloadLocal() {
-    pizza_ordered = JSON.parse(localStorage.getItem('pizzaList'));
-    let disabled;
-    let name;
-    let quantity;
-    let weight;
-    let img;
-    let price;
-    let new_order;
-    let size;
+    pizza_ordered = JSON.parse(localStorage.getItem('pizzaList')) || [];
     let total_ordered = 0;
     let total_price = 0;
-    let list = JSON.parse(localStorage.getItem('pizzaList'));
-    for (let item of list) {
-        total_ordered += parseInt(item.quantity);
-        total_price += parseInt(item.quantity) * parseInt(item.price);
-        name = item.name;
-        if (item.large) {
-            name += " (Велика)";
-            size = 40;
-        } else {
-            name += " (Мала)";
-            size = 30;
-        }
-        disabled = parseInt(item.quantity) === 1 ? "disabled" : "";
-        weight = item.weight;
-        quantity = item.quantity;
-        price = item.price;
-        img = item.image;
-        new_order = document.createElement('div');
+
+    pizza_ordered.forEach(item => {
+        total_ordered += item.quantity;
+        total_price += item.quantity * item.price;
+
+        const name = `${item.name} (${item.large ? 'Велика' : 'Мала'})`;
+        const size = item.large ? 40 : 30;
+        const disabled = item.quantity === 1 ? "disabled" : "";
+
+        const new_order = document.createElement('div');
         new_order.classList.add("ordered-item");
-        new_order.innerHTML = `<div class="details">
-            <span class="pizza-name">${name}</span>
-            <div class="order-info">
-                <div class="size">
-                    <img src="assets/images/size-icon.svg"/><span>${size}</span>
+        new_order.innerHTML = `
+            <div class="details">
+                <span class="pizza-name">${name}</span>
+                <div class="order-info">
+                    <div class="size">
+                        <img src="assets/images/size-icon.svg"/><span>${size}</span>
+                    </div>
+                    <div class="weight">
+                        <img src="assets/images/weight.svg"/><span>${item.weight}</span>
+                    </div>
                 </div>
-                <div class="weight">
-                    <img src="assets/images/weight.svg"/><span>${weight}</span>
-                </div>
-            </div>
-            <form class="control-panel">
-                <span>${price}грн</span>
-                <div class="amount-control">
-                    <button type="button" class="minus ${disabled}" onclick="reduce(event)">
-                        -
-                    </button>
-                    <span class="amount">${quantity}</span>
-                    <button type="button" class="plus" onclick="increase(event)">
-                        +
-                    </button>
-                </div>
-                <button type="button" class="delete" onclick="remove(event)">
+                <form class="control-panel">
+                    <span>${item.price}грн</span>
+                    <div class="amount-control">
+                        <button type="button" class="minus ${disabled}" onclick="reduce(event)">
+                            -
+                        </button>
+                        <span class="amount">${item.quantity}</span>
+                        <button type="button" class="plus" onclick="increase(event)">
+                            +
+                        </button>
+                    </div>
+                    <button type="button" class="delete" onclick="remove(event)">
                         x
-                </button>
-            </form>
+                    </button>
+                </form>
             </div>
             <div class="order-picture">
-                <img src=${img}>
+                <img src=${item.image}>
             </div>
-        </div>`;
+        `;
         document.querySelector(".order-list").appendChild(new_order);
-    }
+    });
+
     total.textContent = total_ordered;
-    total_sum.textContent = total_price + "грн";
+    total_sum.textContent = `${total_price}грн`;
 }
 
 if (localStorage.getItem("pizzaList") !== null) {
     downloadLocal();
 }
 
-function increase(event) {
-    let order = event.target.closest(".ordered-item");
-    let quantity = order.querySelector(".amount");
-    let name;
-    let size;
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 2) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[1];
-    }
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 3) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0] + " " + order.querySelector(".pizza-name").textContent.split(" ")[1];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[2];
-    }
+function updateQuantity(order, increment) {
+    const quantity = order.querySelector(".amount");
+    const amount = parseInt(quantity.textContent);
+    const nameSize = order.querySelector(".pizza-name").textContent.split(" ");
+    const name = nameSize.length === 2 ? nameSize[0] : `${nameSize[0]} ${nameSize[1]}`;
+    const size = nameSize.length === 2 ? nameSize[1] : nameSize[2];
+
     for (let pizza of pizza_ordered) {
         if (pizza.name === name && ((pizza.large && size === "(Велика)") || (!pizza.large && size === "(Мала)"))) {
-            pizza.quantity++;
+            pizza.quantity += increment;
+            if (pizza.quantity <= 0) {
+                pizza_ordered = pizza_ordered.filter(item => item !== pizza);
+                order.remove();
+            } else {
+                quantity.textContent = pizza.quantity;
+                order.querySelector(".minus").classList.toggle('disabled', pizza.quantity === 1);
+            }
+            break;
         }
     }
-    let amount = parseInt(quantity.textContent);
-    quantity.textContent = amount + 1;
-    total.textContent = parseInt(total.textContent) + 1;
-    order.querySelector(".minus").classList.remove('disabled');
-    let price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + price) + "грн";
+
+    const price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
+    total.textContent = parseInt(total.textContent) + increment;
+    total_sum.textContent = `${parseInt(total_sum.textContent.split(" ")[0]) + increment * price}грн`;
     localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
+}
+
+function increase(event) {
+    const order = event.target.closest(".ordered-item");
+    updateQuantity(order, 1);
 }
 
 function reduce(event) {
-    let order = event.target.closest(".ordered-item");
-    let quantity = order.querySelector(".amount");
-    let amount = parseInt(quantity.textContent);
-    let name;
-    let size;
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 2) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[1];
-    }
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 3) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0] + " " + order.querySelector(".pizza-name").textContent.split(" ")[1];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[2];
-    }
-    for (let pizza of pizza_ordered) {
-        if (pizza.name === name && ((pizza.large && size === "(Велика)") || (!pizza.large && size === "(Мала)"))) {
-            pizza.quantity--;
-            break;
-        }
-    }
-    quantity.textContent = amount - 1;
-    total.textContent = parseInt(total.textContent) - 1;
-    if (quantity.textContent == 1) {
-        order.querySelector(".minus").classList.add('disabled');
-    }
-    let price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) - price) + "грн";
-    localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
+    const order = event.target.closest(".ordered-item");
+    updateQuantity(order, -1);
 }
 
 function remove(event) {
-    let order = event.target.closest(".ordered-item");
-    let quantity = order.querySelector(".amount").textContent;
-    let name;
-    let size;
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 2) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[1];
-    }
-    if (order.querySelector(".pizza-name").textContent.split(" ").length === 3) {
-        name = order.querySelector(".pizza-name").textContent.split(" ")[0] + " " + order.querySelector(".pizza-name").textContent.split(" ")[1];
-        size = order.querySelector(".pizza-name").textContent.split(" ")[2];
-    }
-    for (let pizza of pizza_ordered) {
-        if (pizza.name === name && ((pizza.large && size === "(Велика)") || (!pizza.large && size === "(Мала)"))) {
-            pizza_ordered = pizza_ordered.filter(item => item !== pizza);
-            break;
-        }
-    }
-    let price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) - price * parseInt(quantity)) + "грн";
-    total.textContent = parseInt(total.textContent) - parseInt(quantity);
-    order.remove();
-    localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
+    const order = event.target.closest(".ordered-item");
+    const quantity = parseInt(order.querySelector(".amount").textContent);
+    updateQuantity(order, -quantity);
 }
 
 function clear_orders() {
-    let list = document.querySelector(".order-list");
-    list.innerHTML = ``;
+    document.querySelector(".order-list").innerHTML = '';
     pizza_ordered = [];
     total.textContent = 0;
     total_sum.textContent = "0 грн";
@@ -408,36 +352,22 @@ function clear_orders() {
 }
 
 function filter_pizza(element) {
-    for (let filter of document.querySelector(".filters").getElementsByTagName("span")) {
-        filter.classList.remove("chosen");
-    }
+    document.querySelectorAll(".filters span").forEach(filter => filter.classList.remove("chosen"));
     element.classList.add("chosen");
-    all_pizzas = 0;
-    let filter = element.classList[0].trim();
-    if (filter === 'meat' || filter === 'seafood' || filter === 'vegan') {
-        for (let pizza of document.getElementsByClassName("pizza-item")) {
+
+    const filter = element.classList[0].trim();
+    const all_pizzas = Array.from(document.getElementsByClassName("pizza-item")).filter(pizza => {
+        if (filter === 'all') {
             pizza.style.display = "inline-block";
-            if (pizza.getAttribute('type') !== filter) {
-                pizza.style.display = "none";
-            } else {
-                all_pizzas += 1;
-            }
+            return true;
         }
-    } else if (filter === 'mushrooms' || filter === "pineapple") {
-        for (let pizza of document.getElementsByClassName("pizza-item")) {
-            pizza.style.display = "inline-block";
-            if (pizza.getAttribute('add-ons') !== filter) {
-                pizza.style.display = "none";
-            } else {
-                all_pizzas += 1;
-            }
-        }
-    } else if (filter === 'all') {
-        for (let pizza of document.getElementsByClassName("pizza-item")) {
-            pizza.style.display = "inline-block";
-            all_pizzas += 1;
-        }
-    }
+        const typeMatch = pizza.getAttribute('type') === filter;
+        const addOnMatch = pizza.getAttribute('add-ons') === filter;
+        const match = typeMatch || addOnMatch;
+        pizza.style.display = match ? "inline-block" : "none";
+        return match;
+    }).length;
+
     document.querySelector(".pizza-filters .pizzas-amount").textContent = all_pizzas;
 }
 
