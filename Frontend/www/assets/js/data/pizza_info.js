@@ -150,7 +150,7 @@ var pizza_info = [
     {
         id:6,
         icon:'assets/images/pizza_4.jpg',
-        title: "Россо Густо",
+        title: "Гусаво Фрінг",
         type: 'seafood',
         content: {
             ocean: ['ікра червона', 'лосось копчений'],
@@ -170,4 +170,4 @@ var pizza_info = [
     }
 ];
 
-export default pizzaInfo;
+export default pizza_info;
