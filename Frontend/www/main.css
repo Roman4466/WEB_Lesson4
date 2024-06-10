@@ -18,7 +18,7 @@ body{
     height: 100px;
     width:calc(100% - 350px);
     background-color: black;
-    opacity: 85%;/* This makes the top bar semi-transparent */
+    opacity: 85%;
     z-index:3;
 }
 .delivery-info{
@@ -567,7 +567,6 @@ img{
 .footer span{
     display: block;
 }
-
 @media(max-width: 730px) {
 
     .ordered-item .details .size{

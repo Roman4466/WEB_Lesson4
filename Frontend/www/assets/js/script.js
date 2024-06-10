@@ -98,16 +98,6 @@ function createBadge(pizza) {
     return '';
 }
 
-function addEventListeners() {
-    document.querySelectorAll('.buy-small').forEach(button => {
-        button.addEventListener('click', buy_small);
-    });
-
-    document.querySelectorAll('.buy-large').forEach(button => {
-        button.addEventListener('click', buy_large);
-    });
-}
-
 let total = document.querySelector(".cart .cart-title span span");
 let total_sum = document.querySelector(".cart .buy-section .sum");
 let all_pizzas = 8;
@@ -125,129 +115,132 @@ class Pizza {
 
 let pizza_ordered = [];
 
-function buy_large(event) {
-    let item = event.target.closest(".thumbnail");
-    let name = item.querySelector(".name").textContent.trim();
-    let large_name = name + " (Велика)";
-    let price = item.querySelector(".size-l").querySelector(".price").querySelector('b').textContent;
-    for (let pizza of pizza_ordered) {
-        if (pizza.name === name && pizza.large) {
-            pizza.quantity++;
-            for (let order of document.querySelector(".order-list").getElementsByClassName("ordered-item")) {
-                if (order.querySelector(".pizza-name").textContent == large_name.trim()) {
-                    let quantity = order.querySelector(".amount");
-                    let amount = parseInt(quantity.textContent);
-                    quantity.textContent = amount + 1;
-                    total.textContent = parseInt(total.textContent) + 1;
-                    order.querySelector(".minus").classList.remove('disabled');
-                    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + parseInt(price)) + "грн";
-                    localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
-                    return;
-                }
-            }
-        }
+function addEventListeners() {
+    document.querySelectorAll('.buy-small').forEach(button => {
+        button.addEventListener('click', buyPizza.bind(null, false));
+    });
+
+    document.querySelectorAll('.buy-large').forEach(button => {
+        button.addEventListener('click', buyPizza.bind(null, true));
+    });
+}
+
+function buyPizza(isLarge, event) {
+    const item = event.target.closest(".thumbnail");
+    const name = item.querySelector(".name").textContent.trim();
+    const priceElement = item.querySelector(isLarge ? ".size-l .price b" : ".size-s .price b");
+    const price = parseInt(priceElement.textContent);
+    const sizeType = isLarge ? " (Велика)" : " (Мала)";
+    const fullName = name + sizeType;
+
+    let existingPizza = pizza_ordered.find(pizza => pizza.name === name && pizza.large === isLarge);
+    
+    if (existingPizza) {
+        existingPizza.quantity++;
+        updateOrderUI(fullName, price, 1);
+    } else {
+        const weight = item.querySelector(isLarge ? ".size-l .weight span" : ".size-s .weight span").textContent;
+        const image = item.querySelector("img").getAttribute('src');
+        const newPizza = new Pizza(name, isLarge, 1, price, image, weight);
+        pizza_ordered.push(newPizza);
+        addNewOrderUI(newPizza, fullName);
     }
-    let weight = item.querySelector(".size-l").querySelector(".weight").querySelector('span').textContent;
-    let new_order = document.createElement('div');
-    let image = item.querySelector("img").getAttribute('src');
-    new_order.classList.add("ordered-item");
-    pizza_ordered.push(new Pizza(name, true, 1, price, image, weight));
-    new_order.innerHTML = `<div class="details">
-            <span class="pizza-name">${name} (Велика)</span>
-            <div class="order-info">
-                <div class="size">
-                    <img src="assets/images/size-icon.svg"/><span>40</span>
-                </div>
-                <div class="weight">
-                    <img src="assets/images/weight.svg"/><span>${weight}</span>
-                </div>
-            </div>
-            <form class="control-panel">
-                <span>${price}грн</span>
-                <div class="amount-control">
-                    <button type="button" class="minus disabled" onclick="reduce(event)">
-                        -
-                    </button>
-                    <span class="amount">1</span>
-                    <button type="button" class="plus" onclick="increase(event)">
-                        +
-                    </button>
-                </div>
-                <button type="button" class="delete" onclick="remove(event)">
-                        x
-                </button>
-            </form>
-            </div>
-            <div class="order-picture">
-                <img src=${image}>
-            </div>
-        </div>`;
-    document.querySelector(".order-list").appendChild(new_order);
-    total.textContent = parseInt(total.textContent) + 1;
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + parseInt(price)) + "грн";
+
     localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
 }
 
-function buy_small(event) {
-    let item = event.target.closest(".thumbnail");
-    let name = item.querySelector(".name").textContent.trim();
-    let large_name = name + " (Мала)";
-    let price = item.querySelector(".size-s").querySelector(".price").querySelector('b').textContent;
-    for (let pizza of pizza_ordered) {
-        if (pizza.name === name && !pizza.large) {
-            pizza.quantity++;
-            for (let order of document.querySelector(".order-list").getElementsByClassName("ordered-item")) {
-                if (order.querySelector(".pizza-name").textContent == large_name.trim()) {
-                    let quantity = order.querySelector(".amount");
-                    let amount = parseInt(quantity.textContent);
-                    quantity.textContent = amount + 1;
-                    total.textContent = parseInt(total.textContent) + 1;
-                    order.querySelector(".minus").classList.remove('disabled');
-                    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + parseInt(price)) + "грн";
-                    localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
-                    return;
-                }
+function updateOrderUI(name, price, quantityChange) {
+    document.querySelectorAll(".ordered-item").forEach(order => {
+        if (order.querySelector(".pizza-name").textContent.trim() === name.trim()) {
+            const quantityElement = order.querySelector(".amount");
+            const currentQuantity = parseInt(quantityElement.textContent);
+            quantityElement.textContent = currentQuantity + quantityChange;
+            total.textContent = parseInt(total.textContent) + quantityChange;
+            total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + (price * quantityChange)) + "грн";
+
+            if (currentQuantity + quantityChange > 1) {
+                order.querySelector(".minus").classList.remove('disabled');
             }
         }
-    }
-    let weight = item.querySelector(".size-s").querySelector(".weight").querySelector('span').textContent;
-    let new_order = document.createElement('div');
-    let image = item.querySelector("img").getAttribute('src');
-    pizza_ordered.push(new Pizza(name, false, 1, price, image, weight));
-    new_order.classList.add("ordered-item");
-    new_order.innerHTML = `<div class="details">
-            <span class="pizza-name">${name} (Мала)</span>
+    });
+}
+
+function addNewOrderUI(pizza, fullName) {
+    const newOrder = document.createElement('div');
+    newOrder.classList.add("ordered-item");
+    newOrder.innerHTML = `
+        <div class="details">
+            <span class="pizza-name">${fullName}</span>
             <div class="order-info">
                 <div class="size">
-                    <img src="assets/images/size-icon.svg"/><span>30</span>
+                    <img src="assets/images/size-icon.svg"/><span>${pizza.large ? 40 : 30}</span>
                 </div>
                 <div class="weight">
-                    <img src="assets/images/weight.svg"/><span>${weight}</span>
+                    <img src="assets/images/weight.svg"/><span>${pizza.weight}</span>
                 </div>
             </div>
             <form class="control-panel">
-                <span>${price}грн</span>
+                <span>${pizza.price}грн</span>
                 <div class="amount-control">
-                    <button type="button" class="minus disabled" onclick="reduce(event)">
+                    <button type="button" class="minus disabled" onclick="changeQuantity(event, -1)">
                         -
                     </button>
                     <span class="amount">1</span>
-                    <button type="button" class="plus" onclick="increase(event)">
+                    <button type="button" class="plus" onclick="changeQuantity(event, 1)">
                         +
                     </button>
                 </div>
-                <button type="button" class="delete" onclick="remove(event)">
-                        x
+                <button type="button" class="delete" onclick="removePizza(event)">
+                    x
                 </button>
             </form>
-            </div>
-            <div class="order-picture">
-                <img src=${image}>
-            </div>
-        </div>`;
-    document.querySelector(".order-list").appendChild(new_order);
+        </div>
+        <div class="order-picture">
+            <img src=${pizza.image}>
+        </div>
+    `;
+    document.querySelector(".order-list").appendChild(newOrder);
     total.textContent = parseInt(total.textContent) + 1;
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + parseInt(price)) + "грн";
+    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + pizza.price) + "грн";
+}
+
+function changeQuantity(event, change) {
+    const order = event.target.closest(".ordered-item");
+    const quantityElement = order.querySelector(".amount");
+    const currentQuantity = parseInt(quantityElement.textContent);
+    const name = order.querySelector(".pizza-name").textContent.trim();
+    const price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
+
+    if (currentQuantity + change > 0) {
+        quantityElement.textContent = currentQuantity + change;
+        total.textContent = parseInt(total.textContent) + change;
+        total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + (price * change)) + "грн";
+
+        const pizza = pizza_ordered.find(pizza => (pizza.name + (pizza.large ? " (Велика)" : " (Мала)")) === name);
+        pizza.quantity += change;
+
+        if (currentQuantity + change === 1) {
+            order.querySelector(".minus").classList.add('disabled');
+        } else {
+            order.querySelector(".minus").classList.remove('disabled');
+        }
+
+        localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
+    }
+}
+
+function removePizza(event) {
+    const order = event.target.closest(".ordered-item");
+    const name = order.querySelector(".pizza-name").textContent.trim();
+    const quantity = parseInt(order.querySelector(".amount").textContent);
+    const price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
+
+    pizza_ordered = pizza_ordered.filter(pizza => (pizza.name + (pizza.large ? " (Велика)" : " (Мала)")) !== name);
+
+    total.textContent = parseInt(total.textContent) - quantity;
+    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) - (price * quantity)) + "грн";
+
+    order.remove();
     localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
 }
 
@@ -449,7 +442,7 @@ function filter_pizza(element) {
 }
 
 function openLink() {
-    window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Replace with the URL you want to open
+    window.location.href = "https://www.youtube.com/watch?v=TgQsIgX283Q";
 }
 
 initializePizzaList();
