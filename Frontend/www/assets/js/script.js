@@ -7,92 +7,98 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-function initializePizzaList(pizza_info) {
-    for (let pizza of pizza_info) {
-        let new_pizza = document.createElement('div');
-        let pizza_type = pizza.type === "meat" ? "М'ясна піца" : pizza.type === "seafood" ? "Піца з морепродуктами" : "Веганська піца";
-        new_pizza.classList.add('pizza-item');
-        new_pizza.setAttribute("type", pizza.type);
-        if (pizza.content.pineapple !== undefined) {
-            new_pizza.setAttribute("add-ons", "pineapple");
-        }
-        if (pizza.content.mushroom !== undefined) {
-            new_pizza.setAttribute("add-ons", "mushrooms");
-        }
-        let single = "single";
-        if (pizza.small_size !== undefined && pizza.big_size !== undefined) {
-            single = "";
-        }
-        new_pizza.innerHTML = `<div class="thumbnail">
+function initializePizzaList(pizzaInfo) {
+    const productsContainer = document.querySelector('.list');
+    
+    pizzaInfo.forEach(pizza => {
+        const pizzaItem = createPizzaItem(pizza);
+        productsContainer.appendChild(pizzaItem);
+    });
+
+    addEventListeners();
+}
+
+function createPizzaItem(pizza) {
+    const pizzaItem = document.createElement('div');
+    pizzaItem.classList.add('pizza-item');
+    pizzaItem.setAttribute("type", pizza.type);
+    
+    if (pizza.content.pineapple) {
+        pizzaItem.setAttribute("add-ons", "pineapple");
+    }
+    
+    if (pizza.content.mushroom) {
+        pizzaItem.setAttribute("add-ons", "mushrooms");
+    }
+    
+    const singleSizeClass = (pizza.small_size && pizza.big_size) ? "" : "single";
+    pizzaItem.innerHTML = `
+        <div class="thumbnail">
+            ${createBadge(pizza)}
             <img src="${pizza.icon}" alt="pizza-image">
             <div class="information">
-                <span class="name">
-                    ${pizza.title}
-                </span>
-                <span class="pizza-type">
-                    ${pizza_type}
-                </span>
-                <span class="ingredients">
-                ${Object.values(pizza.content).flat().join(', ')}
-                </span>
-                <div class="size-info ${single}">
+                <span class="name">${pizza.title}</span>
+                <span class="pizza-type">${getPizzaType(pizza.type)}</span>
+                <span class="ingredients">${getIngredients(pizza.content)}</span>
+                <div class="size-info ${singleSizeClass}">
+                    ${createSizeInfo(pizza.small_size, "small")}
+                    ${createSizeInfo(pizza.big_size, "large")}
                 </div>
             </div>
-        </div>`;
-        let small_size = document.createElement("div");
-        small_size.classList.add("size-s");
-        let big_size = document.createElement("div");
-        big_size.classList.add("size-l");
-        let products = document.querySelector('.list');
-        if (pizza.small_size !== undefined) {
-            small_size.innerHTML = `<div class="size">
-                            <img src="assets/images/size-icon.svg"/><span>${pizza.small_size.size}</span>
-                        </div>
-                        <div class="weight">
-                            <img src="assets/images/weight.svg"/><span>${pizza.small_size.weight}</span>
-                        </div>
-                        <div class="price">
-                            <b>${pizza.small_size.price}</b>
-                        </div>
-                        <span>грн.</span>
-                        <button type="button" class="buy-small">
-                            Купити
-                        </button>`;
-            new_pizza.querySelector(".size-info").appendChild(small_size);
-        }
-        if (pizza.big_size !== undefined) {
-            big_size.innerHTML = `<div class="size">
-                        <img src="assets/images/size-icon.svg"/><span>${pizza.big_size.size}</span>
-                    </div>
-                    <div class="weight">
-                        <img src="assets/images/weight.svg"/><span>${pizza.big_size.weight}</span>
-                    </div>
-                    <div class="price">
-                        <b>${pizza.big_size.price}</b>
-                    </div>
-                    <span>грн.</span>
-                    <button type="button" class="buy-large">
-                        Купити
-                    </button>`;
-            new_pizza.querySelector(".size-info").appendChild(big_size);
-        }
-        if (pizza.is_new !== undefined) {
-            let badge = document.createElement("div");
-            badge.classList.add("new");
-            badge.innerHTML = `Нова`;
-            new_pizza.appendChild(badge);
-            products.appendChild(new_pizza);
-            continue;
-        }
-        if (pizza.is_popular !== undefined) {
-            let badge = document.createElement("div");
-            badge.classList.add("popular");
-            badge.innerHTML = `Популярна`;
-            new_pizza.appendChild(badge);
-        }
-        products.appendChild(new_pizza);
-    }
+        </div>
+    `;
+    return pizzaItem;
+}
 
+function getPizzaType(type) {
+    switch (type) {
+        case "meat":
+            return "М'ясна піца";
+        case "seafood":
+            return "Піца з морепродуктами";
+        case "vegan":
+            return "Веганська піца";
+        default:
+            return "";
+    }
+}
+
+function getIngredients(content) {
+    return Object.values(content).flat().join(', ');
+}
+
+function createSizeInfo(size, sizeType) {
+    if (!size) return "";
+    
+    return `
+        <div class="size-${sizeType.charAt(0)}">
+            <div class="size">
+                <img src="assets/images/size-icon.svg"/><span>${size.size}</span>
+            </div>
+            <div class="weight">
+                <img src="assets/images/weight.svg"/><span>${size.weight}</span>
+            </div>
+            <div class="price">
+                <b>${size.price}</b> грн.
+            </div>
+            <button type="button" class="buy-${sizeType}">
+                Купити
+            </button>
+        </div>
+    `;
+}
+
+function createBadge(pizza) {
+    if (pizza.is_new) {
+        return '<div class="new">Нова</div>';
+    }
+    if (pizza.is_popular) {
+        return '<div class="popular">Популярна</div>';
+    }
+    return '';
+}
+
+function addEventListeners() {
     document.querySelectorAll('.buy-small').forEach(button => {
         button.addEventListener('click', buy_small);
     });
