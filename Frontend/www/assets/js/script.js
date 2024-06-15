@@ -242,44 +242,9 @@ function downloadLocal() {
     pizza_ordered.forEach(item => {
         total_ordered += item.quantity;
         total_price += item.quantity * item.price;
-
-        const name = `${item.name} (${item.large ? 'Велика' : 'Мала'})`;
-        const size = item.large ? 40 : 30;
-
-        const new_order = document.createElement('div');
-        new_order.classList.add("ordered-item");
-        new_order.innerHTML = `
-            <div class="details">
-                <span class="pizza-name">${name}</span>
-                <div class="order-info">
-                    <div class="size">
-                        <img src="assets/images/size-icon.svg"/><span>${size}</span>
-                    </div>
-                    <div class="weight">
-                        <img src="assets/images/weight.svg"/><span>${item.weight}</span>
-                    </div>
-                </div>
-                <form class="control-panel">
-                    <span>${item.price}грн</span>
-                    <div class="amount-control">
-                        <button type="button" class="minus" onclick="reduce(event)">
-                            -
-                        </button>
-                        <span class="amount">${item.quantity}</span>
-                        <button type="button" class="plus" onclick="increase(event)">
-                            +
-                        </button>
-                    </div>
-                    <button type="button" class="delete" onclick="remove(event)">
-                        x
-                    </button>
-                </form>
-            </div>
-            <div class="order-picture">
-                <img src=${item.image}>
-            </div>
-        `;
-        document.querySelector(".order-list").appendChild(new_order);
+        
+        const fullName = `${item.name} (${item.large ? 'Велика' : 'Мала'})`;
+        addNewOrderUI(item, fullName);
     });
 
     total.textContent = total_ordered;
@@ -288,42 +253,6 @@ function downloadLocal() {
 
 if (localStorage.getItem("pizzaList") !== null) {
     downloadLocal();
-}
-
-function updateQuantity(order, increment) {
-    const quantity = order.querySelector(".amount");
-    const amount = parseInt(quantity.textContent);
-    const nameSize = order.querySelector(".pizza-name").textContent.split(" ");
-    const name = nameSize.length === 2 ? nameSize[0] : `${nameSize[0]} ${nameSize[1]}`;
-    const size = nameSize.length === 2 ? nameSize[1] : nameSize[2];
-
-    for (let pizza of pizza_ordered) {
-        if (pizza.name === name && ((pizza.large && size === "(Велика)") || (!pizza.large && size === "(Мала)"))) {
-            pizza.quantity += increment;
-            if (pizza.quantity <= 0) {
-                pizza_ordered = pizza_ordered.filter(item => item !== pizza);
-                order.remove();
-            } else {
-                quantity.textContent = pizza.quantity;
-            }
-            break;
-        }
-    }
-
-    const price = parseInt(order.querySelector(".control-panel span").textContent.slice(0, -3));
-    total.textContent = parseInt(total.textContent) + increment;
-    total_sum.textContent = `${parseInt(total_sum.textContent.split(" ")[0]) + increment * price}грн`;
-    localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
-}
-
-function increase(event) {
-    const order = event.target.closest(".ordered-item");
-    updateQuantity(order, 1);
-}
-
-function reduce(event) {
-    const order = event.target.closest(".ordered-item");
-    updateQuantity(order, -1);
 }
 
 function remove(event) {
