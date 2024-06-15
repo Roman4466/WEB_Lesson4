@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
 function initializePizzaList(pizzaInfo) {
     const productsContainer = document.querySelector('.list');
     
@@ -156,10 +155,6 @@ function updateOrderUI(name, price, quantityChange) {
             quantityElement.textContent = currentQuantity + quantityChange;
             total.textContent = parseInt(total.textContent) + quantityChange;
             total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + (price * quantityChange)) + "грн";
-
-            if (currentQuantity + quantityChange > 1) {
-                order.querySelector(".minus").classList.remove('disabled');
-            }
         }
     });
 }
@@ -181,7 +176,7 @@ function addNewOrderUI(pizza, fullName) {
             <form class="control-panel">
                 <span>${pizza.price}грн</span>
                 <div class="amount-control">
-                    <button type="button" class="minus disabled" onclick="changeQuantity(event, -1)">
+                    <button type="button" class="minus" onclick="changeQuantity(event, -1)">
                         -
                     </button>
                     <span class="amount">1</span>
@@ -218,13 +213,9 @@ function changeQuantity(event, change) {
         const pizza = pizza_ordered.find(pizza => (pizza.name + (pizza.large ? " (Велика)" : " (Мала)")) === name);
         pizza.quantity += change;
 
-        if (currentQuantity + change === 1) {
-            order.querySelector(".minus").classList.add('disabled');
-        } else {
-            order.querySelector(".minus").classList.remove('disabled');
-        }
-
         localStorage.setItem("pizzaList", JSON.stringify(pizza_ordered));
+    } else if (currentQuantity + change === 0) {
+        removePizza(event);
     }
 }
 
@@ -254,7 +245,6 @@ function downloadLocal() {
 
         const name = `${item.name} (${item.large ? 'Велика' : 'Мала'})`;
         const size = item.large ? 40 : 30;
-        const disabled = item.quantity === 1 ? "disabled" : "";
 
         const new_order = document.createElement('div');
         new_order.classList.add("ordered-item");
@@ -272,7 +262,7 @@ function downloadLocal() {
                 <form class="control-panel">
                     <span>${item.price}грн</span>
                     <div class="amount-control">
-                        <button type="button" class="minus ${disabled}" onclick="reduce(event)">
+                        <button type="button" class="minus" onclick="reduce(event)">
                             -
                         </button>
                         <span class="amount">${item.quantity}</span>
@@ -315,7 +305,6 @@ function updateQuantity(order, increment) {
                 order.remove();
             } else {
                 quantity.textContent = pizza.quantity;
-                order.querySelector(".minus").classList.toggle('disabled', pizza.quantity === 1);
             }
             break;
         }
@@ -374,5 +363,3 @@ function filter_pizza(element) {
 function openLink() {
     window.location.href = "https://www.youtube.com/watch?v=TgQsIgX283Q";
 }
-
-initializePizzaList();
