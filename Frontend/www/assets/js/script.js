@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(response => response.json())
     .then(data => {
         initializePizzaList(data);
+
+        if (localStorage.getItem("pizzaList") !== null) {
+            downloadLocal();
+        }
     });
 });
 
@@ -179,7 +183,7 @@ function addNewOrderUI(pizza, fullName) {
                     <button type="button" class="minus" onclick="changeQuantity(event, -1)">
                         -
                     </button>
-                    <span class="amount">1</span>
+                    <span class="amount">${pizza.quantity}</span>
                     <button type="button" class="plus" onclick="changeQuantity(event, 1)">
                         +
                     </button>
@@ -194,8 +198,6 @@ function addNewOrderUI(pizza, fullName) {
         </div>
     `;
     document.querySelector(".order-list").appendChild(newOrder);
-    total.textContent = parseInt(total.textContent) + 1;
-    total_sum.textContent = (parseInt(total_sum.textContent.split(" ")[0]) + pizza.price) + "грн";
 }
 
 function changeQuantity(event, change) {
@@ -236,23 +238,17 @@ function removePizza(event) {
 
 function downloadLocal() {
     pizza_ordered = JSON.parse(localStorage.getItem('pizzaList')) || [];
-    let total_ordered = 0;
-    let total_price = 0;
-
     pizza_ordered.forEach(item => {
-        total_ordered += item.quantity;
-        total_price += item.quantity * item.price;
-        
         const fullName = `${item.name} (${item.large ? 'Велика' : 'Мала'})`;
         addNewOrderUI(item, fullName);
     });
 
+    // Update total and sum
+    const total_ordered = pizza_ordered.reduce((sum, item) => sum + item.quantity, 0);
+    const total_price = pizza_ordered.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
     total.textContent = total_ordered;
     total_sum.textContent = `${total_price}грн`;
-}
-
-if (localStorage.getItem("pizzaList") !== null) {
-    downloadLocal();
 }
 
 function remove(event) {
