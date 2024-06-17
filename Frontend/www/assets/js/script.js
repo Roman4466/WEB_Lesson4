@@ -284,7 +284,6 @@ function filter_pizza(element) {
 
     document.querySelector(".pizza-filters .pizzas-amount").textContent = all_pizzas;
 }
-
 function openLink() {
-    window.location.href = "https://www.youtube.com/watch?v=TgQsIgX283Q";
+    window.location.href = "report.html";
 }
