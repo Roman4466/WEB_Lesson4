@@ -10,6 +10,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+let pizza_ordered = [];
+
+function addEventListeners() {
+    document.querySelectorAll('.buy-small').forEach(button => {
+        button.addEventListener('click', buyPizza.bind(null, false));
+    });
+
+    document.querySelectorAll('.buy-large').forEach(button => {
+        button.addEventListener('click', buyPizza.bind(null, true));
+    });
+}
+
 function initializePizzaList(pizzaInfo) {
     const productsContainer = document.querySelector('.list');
     
@@ -115,17 +127,6 @@ class Pizza {
     }
 }
 
-let pizza_ordered = [];
-
-function addEventListeners() {
-    document.querySelectorAll('.buy-small').forEach(button => {
-        button.addEventListener('click', buyPizza.bind(null, false));
-    });
-
-    document.querySelectorAll('.buy-large').forEach(button => {
-        button.addEventListener('click', buyPizza.bind(null, true));
-    });
-}
 
 function buyPizza(isLarge, event) {
     const item = event.target.closest(".thumbnail");
@@ -284,7 +285,6 @@ function filter_pizza(element) {
 
     document.querySelector(".pizza-filters .pizzas-amount").textContent = all_pizzas;
 }
-
 function openLink() {
-    window.location.href = "https://www.youtube.com/watch?v=TgQsIgX283Q";
+    window.location.href = "report.html";
 }
